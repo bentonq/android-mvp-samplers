@@ -5,10 +5,13 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
-import android.widget.EditText;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements TextView.OnEditorActionListener {
+
+    private TextView mTarget;
+    private TextView mResult;
+    private TextView mActual;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -17,41 +20,50 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        final TextView targetValueView = (TextView) findViewById(R.id.targetValueView);
-        final TextView resultValueView = (TextView) findViewById(R.id.resultValueView);
+        // Find the three view objects, assign the field.
+        mTarget = (TextView) findViewById(R.id.targetValueView);
+        mResult = (TextView) findViewById(R.id.resultValueView);
+        mActual = (TextView) findViewById(R.id.actualValueView);
 
-        EditText actualEditer = (EditText) findViewById(R.id.actualValueView);
-        actualEditer.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (event != null) {
-                    try {
-                        String actualValue = v.getText().toString();
-                        float actual = Float.valueOf(actualValue);
+        // Register the edit event observer to actual text view.
+        mActual.setOnEditorActionListener(this);
+    }
 
-                        String targetValue = targetValueView.getText().toString();
-                        float target = Float.valueOf(targetValue);
+    @Override
+    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+        // Text changed, user enters a new actual value
+        if (event != null) {
+            try {
+                // 1. Get actual value
+                String actualValue = v.getText().toString();
+                float actual = Float.valueOf(actualValue);
 
-                        float result = (float) actual / target * 100;
-                        String resultValue = result + "%";
-                        resultValueView.setText(resultValue);
+                // 2. Get target value
+                String targetValue = mTarget.getText().toString();
+                float target = Float.valueOf(targetValue);
 
-                        int resultColor = Color.BLACK;
-                        if (result < 95f) {
-                            resultColor = Color.RED;
-                        } else if (result > 110f) {
-                            resultColor = Color.BLUE;
-                        }
-                        resultValueView.setTextColor(resultColor);
+                // 3. Compare actual value to target value, calculate out result value
+                //    then update the TextView
+                float result = actual / target * 100.f;
+                String resultValue = result + "%";
+                mResult.setText(resultValue);
 
-                        return true;
-                    } catch (NumberFormatException e) {
-                        v.setText(null);
-                        return false;
-                    }
+                // 4. Calculate out result color and update the TextView
+                int resultColor = Color.BLACK;
+                if (result < 95f) {
+                    resultColor = Color.RED;
+                } else if (result > 110f) {
+                    resultColor = Color.BLUE;
                 }
+                mResult.setTextColor(resultColor);
+
+                return true;
+            } catch (NumberFormatException e) {
+                v.setText(null);
+
                 return false;
             }
-        });
+        }
+        return false;
     }
 }
